@@ -463,12 +463,12 @@ public class Blackjack {
             for (Hand hand : Arrays.asList(hand1, hand2)) {
                 String name = hand.getPlayer().getName();
                 output.append(name).append("'s turn...\n");
-                output.append(name).append(" has "+ hand.getTotalPoints() + " points.\n");
+                // output.append(name).append(" has "+ hand.getTotalPoints() + " points.\n");
                 while (hand.getPlayer().wantsToHit(hand.getTotalPoints())) {
                     Card dealt = this.deck.deal();
                     output.append(name).append(" hits: ").append(dealt.getDescription()).append("\n");
                     hand.addCard(dealt);
-                    output.append(name).append(" now has "+ hand.getTotalPoints() + " points.\n");
+                    // output.append(name).append(" now has "+ hand.getTotalPoints() + " points.\n");
                 }
                 if (hand.getTotalPoints() > 21) {
                     output.append(name).append(" bursts.\n");
