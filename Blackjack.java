@@ -34,8 +34,10 @@ public class Blackjack {
         }
 
         public enum Rank {
-            Ace(1), Two(2), Three(3), Four(4), Five(5), Seven(7), Eight(8), Nine(9), Ten(10),
-            Jack(11), Queen(12), King(13);
+            //Start modified: Face cards are 10 points and missing Six
+            Ace(1), Two(2), Three(3), Four(4), Five(5), Six(6), Seven(7), Eight(8), Nine(9), Ten(10),
+            Jack(10), Queen(10), King(10);
+            //End modified: Face cards are 10 points and missing Six
 
             private int points;
 
@@ -59,7 +61,7 @@ public class Blackjack {
          * @return name of the card
          */
         public String getDescription() {
-            return this.rank + " of" + this.suit;
+            return this.rank + " of " + this.suit;
         }
 
         /**
@@ -101,7 +103,10 @@ public class Blackjack {
          * @param cards cards
          */
         public Deck(List<Card> cards) {
-            this.cards = cards;
+        	//Start modified: clone cards for modification due to remove()
+            this.cards = new LinkedList<Card>();
+            this.cards.addAll(cards);
+        	//End modified: clone cards for modification due to remove()
         }
 
         /**
@@ -117,6 +122,9 @@ public class Blackjack {
             for (int i = 0; i < numberOfCards; i++) {
                 int nextCardIndex = random.nextInt(originalCards.size());
                 Card nextCard = originalCards.get(nextCardIndex);
+                //Start add: originalCards shall be removed the card
+                originalCards.remove(nextCardIndex);
+                //End add: originalCards shall be removed the card
                 shuffledCards.add(nextCard);
             }
 
@@ -129,7 +137,11 @@ public class Blackjack {
          * @return dealt card
          */
         public Card deal() {
-            return this.cards.get(0);
+        	//Start add: draw card shall remove a card
+        	Card card = this.cards.get(0);
+        	this.cards.remove(0);
+            //End add: draw card shall remove a card
+            return card;
         }
 
         /**
@@ -192,7 +204,9 @@ public class Blackjack {
          */
         public int getTotalPoints() {
             int points = 0;
-            for (int i = 1; i  < this.cards.size(); i++) {
+            //Start modified: cards index start from 0
+            for (int i = 0; i  < this.cards.size(); i++) {
+            //End modified: cards index start from 0
                 points += this.cards.get(i).getPoints();
             }
             return points;
@@ -213,7 +227,9 @@ public class Blackjack {
                 return false;
             }
             int otherScore = other.getTotalPoints();
-            if (otherScore > myScore) {
+            //Start modified: otherScore is greater than myScore but must not exceed 21
+            if (otherScore > myScore && otherScore <=21) {
+            //End modified: otherScore is greater than myScore but must not exceed 21
                 return false;
             }
             return true;
@@ -352,17 +368,21 @@ public class Blackjack {
                 return 0.5d;
             }
             int numberOfBusts = 0;
-            int numberOfNonBusts = 0;
+            //int numberOfNonBusts = 0;
             for (Card card : this.fullDeck) {
                 int potentialPoints = currentPoints + card.getPoints();
                 if (potentialPoints > 21) {
                     numberOfBusts++;
                 }
-                else {
+                /*else {
                     numberOfNonBusts++;
-                }
+                }*/
             }
-            return numberOfBusts / (double) numberOfNonBusts;
+            //System.out.println("numberOfBusts: " + numberOfBusts + " / fullDeck: "+this.fullDeck.size()+ " = " + (numberOfBusts / (double) this.fullDeck.size()));
+            //return numberOfBusts / (double) numberOfNonBusts;
+            //Start add: should be numberOfBusts / fullDeck Size
+            return numberOfBusts / (double) this.fullDeck.size();
+            //End add: should be numberOfBusts / fullDeck Size
         }
     }
 
@@ -422,13 +442,19 @@ public class Blackjack {
             StringBuilder output = new StringBuilder();
 
             /* The game begins... */
+            //Start add: dealer shuffle deck of cards
+            this.deck.shuffle(getRandom());
+            //End add: dealer shuffle deck of cards
+
             Hand hand1 = new Hand(this.player1);
             hand1.addCard(this.deck.deal());
             hand1.addCard(this.deck.deal());
 
             Hand hand2 = new Hand(this.player2);
-            hand1.addCard(this.deck.deal());
-            hand1.addCard(this.deck.deal());
+            //Start modified: wrong hand referred
+            hand2.addCard(this.deck.deal());
+            hand2.addCard(this.deck.deal());
+            //End modified: wrong hand referred
 
             output.append(hand1.getPlayer().getName()).append(" starts with ").append(hand1.getDescription()).append("\n");
             output.append(hand2.getPlayer().getName()).append(" starts with ").append(hand2.getDescription()).append("\n");
@@ -437,10 +463,12 @@ public class Blackjack {
             for (Hand hand : Arrays.asList(hand1, hand2)) {
                 String name = hand.getPlayer().getName();
                 output.append(name).append("'s turn...\n");
+                output.append(name).append(" has "+ hand.getTotalPoints() + " points.\n");
                 while (hand.getPlayer().wantsToHit(hand.getTotalPoints())) {
                     Card dealt = this.deck.deal();
                     output.append(name).append(" hits: ").append(dealt.getDescription()).append("\n");
                     hand.addCard(dealt);
+                    output.append(name).append(" now has "+ hand.getTotalPoints() + " points.\n");
                 }
                 if (hand.getTotalPoints() > 21) {
                     output.append(name).append(" bursts.\n");
@@ -472,7 +500,7 @@ public class Blackjack {
      * @param args command line args, unused.
      */
     public static void main(String[] args) {
-        Deck deck = new Deck(ALL_CARDS);
+        final Deck deck = new Deck(ALL_CARDS);
         Random random = new Random();
         ProbabilityCalculator calculator = new ProbabilityCalculator(ALL_CARDS);
         Player player1 = new Player("Harry", calculator);
@@ -482,6 +510,3 @@ public class Blackjack {
     }
 
 }
-
-
-
